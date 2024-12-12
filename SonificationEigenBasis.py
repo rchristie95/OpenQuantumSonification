@@ -448,19 +448,18 @@ a_dag = a.conjugate().T
 Xhat = np.sqrt(hbar/2)*(a_dag + a)
 Phat = 1j*np.sqrt(hbar/2)*(a_dag - a)
 
-h2 = 0.35  # Quartic
-h4 = 0.035
+c2 = 0.35  # Quartic
+c4 = 0.03
+
 def H(Z):
-    return 0.5*Z[1]**2 + h4*Z[0]**4 - h2*Z[0]**2
+    return 0.5*Z[1]**2 + c4*Z[0]**4 - c2*Z[0]**2
 
-def H2(Z,t):
-    return 0.5*Z[1]**2 + h4*Z[0]**4 - t*h2*Z[0]**2
 
-Hhat = 0.5*Phat@Phat + h4*(Xhat@Xhat@Xhat@Xhat) - h2*(Xhat@Xhat)
-HhatGamma = 0.5*Phat@Phat + h4*(Xhat@Xhat@Xhat@Xhat) - h2*(Xhat@Xhat) + 0.5*Gamma*(Xhat@Phat+Phat@Xhat)
+Hhat = 0.5*Phat@Phat + c4*(Xhat@Xhat@Xhat@Xhat) - c2*(Xhat@Xhat)
+HhatGamma = 0.5*Phat@Phat + c4*(Xhat@Xhat@Xhat@Xhat) - c2*(Xhat@Xhat) + 0.5*Gamma*(Xhat@Phat+Phat@Xhat)
 
-Xmin = np.sqrt(h2/(2*h4))
-VMin = h4*Xmin**4 - h2*Xmin**2
+Xmin = np.sqrt(c2/(2*c4))
+VMin = c4*Xmin**4 - c2*Xmin**2
 
 Lhat = np.sqrt(4*Gamma*kT/hbar)*Xhat + 1j*np.sqrt(Gamma*hbar/(4*kT))*Phat  # caldeira
 
@@ -487,7 +486,7 @@ logging.info(Energies[:10])
 xC = np.linspace(-Xview, Xview, 300)
 # Plot potential
 plt.figure()
-plt.plot(xC, h4*xC**4 - h2*xC**2)
+plt.plot(xC, c4*xC**4 - c2*xC**2)
 plt.xlim([-Xview, Xview])
 for nn in range(7):
     plt.axhline(Energies[nn], color='r', linestyle='--')
@@ -498,7 +497,7 @@ MinEnergies = Energies[sortInd[:bSize]]
 ind = sortInd[:bSize]
 
 deltaE = MinEnergies[1]-MinEnergies[0]
-t_tunnel = hbar*np.pi/deltaE
+t_tunnel = np.real(hbar*np.pi/deltaE)
 tf =np.real( 4*t_tunnel)
 dt = tf/600000
 NSSE = 600000
@@ -508,7 +507,7 @@ InvVectors = np.linalg.inv(Vectors)
 
 #%% Sonification of Arrays
 BSound = 12
-rootFreq = 65.406  # in Hz
+rootFreq = 100  # in Hz
 fs = 44100
 duration_per_frame = 1/rootFreq
 frame_length_samples = round(duration_per_frame*fs)
@@ -622,30 +621,37 @@ fig.colorbar(c, ax=ax)
 
 # Plot the potential contour
 xMesh, yMesh = np.meshgrid(np.linspace(-Xview, Xview, Nx), np.linspace(-Xview, Xview, Nx))
-Z = 0.5*yMesh**2+h4 * xMesh**4 - h2 * xMesh**2
+Z = 0.5*yMesh**2 + c4 * xMesh**4 - c2 * xMesh**2
 contour_levels = 25
 ax.contour(xMesh, yMesh, Z, levels=contour_levels, colors='k', linewidths=0.5)
 
 # Initialize expectation value line
 expLine, = ax.plot([], [], 'w-', linewidth=2, label='Expectation Values')
 
+# Add a text object for the clock in the top-left corner
+time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes, fontsize=14,
+                    verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+
 # Set plot limits and labels
 ax.set_xlim([-Xview, Xview])
 ax.set_ylim([-Xview, Xview])
 ax.set_xlabel('$x$', fontsize=16)
 ax.set_ylabel('$p$', fontsize=16)
-ax.set_title('Hamiltonian Wigner Evolution', fontsize=20)
+title = f'Hamiltonian Wigner Evolution, c₂={c2}, c₄={c4}'
+ax.set_title(title, fontsize=20)
 ax.legend(loc='upper right')
 
 # Function to initialize the animation
 def init():
     c.set_array(WigHam[:, :, 0].ravel())
     expLine.set_data([], [])
-    return c, expLine
+    time_text.set_text('T = 0.00')  # Initialize with T = 0.00 or any default value
+    return c, expLine, time_text
 
 # Function to update each frame
 def animate(i):
     # Update Wigner function
+    t = np.real(TSpan[2*i])
     W = WigHam[:, :, i]
     c.set_array(W.ravel())
 
@@ -654,7 +660,10 @@ def animate(i):
     yData = expectationPHam[:i+1]
     expLine.set_data(xData, yData)
 
-    return c, expLine
+    # Update the clock text
+    time_text.set_text(f't = {t:.2f}')
+
+    return c, expLine, time_text
 
 # Create the animation
 anim = animation.FuncAnimation(fig, animate, init_func=init,
@@ -796,30 +805,37 @@ fig.colorbar(c, ax=ax)
 
 # Plot the potential contour
 xMesh, yMesh = np.meshgrid(np.linspace(-Xview, Xview, Nx), np.linspace(-Xview, Xview, Nx))
-Z = 0.5*yMesh**2+h4 * xMesh**4 - h2 * xMesh**2
+Z = 0.5*yMesh**2 + c4 * xMesh**4 - c2 * xMesh**2
 contour_levels = 25
 ax.contour(xMesh, yMesh, Z, levels=contour_levels, colors='k', linewidths=0.5)
 
 # Initialize expectation value line
 expLine, = ax.plot([], [], 'w-', linewidth=2, label='Expectation Values')
 
+# Add a text object for the clock in the top-left corner
+time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes, fontsize=14,
+                    verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+
 # Set plot limits and labels
 ax.set_xlim([-Xview, Xview])
 ax.set_ylim([-Xview, Xview])
 ax.set_xlabel('$x$', fontsize=16)
 ax.set_ylabel('$p$', fontsize=16)
-ax.set_title('SSE Wigner Evolution', fontsize=20)
+title = f'SSE Wigner Evolution, c₂={c2}, c₄={c4}'
+ax.set_title(title, fontsize=20)
 ax.legend(loc='upper right')
 
 # Function to initialize the animation
 def init():
     c.set_array(WigSSE[:, :, 0].ravel())
     expLine.set_data([], [])
-    return c, expLine
+    time_text.set_text('T = 0.00')  # Initialize with T = 0.00 or any default value
+    return c, expLine, time_text
 
 # Function to update each frame
 def animate(i):
     # Update Wigner function
+    t = np.real(TSpan[2*i])
     W = WigSSE[:, :, i]
     c.set_array(W.ravel())
 
@@ -828,11 +844,14 @@ def animate(i):
     yData = expectationPSSE[:i+1]
     expLine.set_data(xData, yData)
 
-    return c, expLine
+    # Update the clock text
+    time_text.set_text(f't = {t:.2f}')
+
+    return c, expLine, time_text
 
 # Create the animation
 anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=WigHam.shape[2], interval=20, blit=True)
+                               frames=WigSSE.shape[2], interval=20, blit=True)
 
 # Save the animation
 video_filename = 'SSEWignerEvolution.mp4'
@@ -984,30 +1003,37 @@ fig.colorbar(c, ax=ax)
 
 # Plot the potential contour
 xMesh, yMesh = np.meshgrid(np.linspace(-Xview, Xview, Nx), np.linspace(-Xview, Xview, Nx))
-Z = 0.5*yMesh**2+h4 * xMesh**4 - h2 * xMesh**2
+Z = 0.5*yMesh**2 + c4 * xMesh**4 - c2 * xMesh**2
 contour_levels = 25
 ax.contour(xMesh, yMesh, Z, levels=contour_levels, colors='k', linewidths=0.5)
 
 # Initialize expectation value line
 expLine, = ax.plot([], [], 'w-', linewidth=2, label='Expectation Values')
 
+# Add a text object for the clock in the top-left corner
+time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes, fontsize=14,
+                    verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+
 # Set plot limits and labels
 ax.set_xlim([-Xview, Xview])
 ax.set_ylim([-Xview, Xview])
 ax.set_xlabel('$x$', fontsize=16)
 ax.set_ylabel('$p$', fontsize=16)
-ax.set_title('Lind Wigner Evolution', fontsize=20)
+title = f'Lindblad Wigner Evolution, c₂={c2}, c₄={c4}'
+ax.set_title(title, fontsize=20)
 ax.legend(loc='upper right')
 
 # Function to initialize the animation
 def init():
     c.set_array(WigLind[:, :, 0].ravel())
     expLine.set_data([], [])
-    return c, expLine
+    time_text.set_text('T = 0.00')  # Initialize with T = 0.00 or any default value
+    return c, expLine, time_text
 
 # Function to update each frame
 def animate(i):
     # Update Wigner function
+    t = np.real(TSpan[2*i])
     W = WigLind[:, :, i]
     c.set_array(W.ravel())
 
@@ -1016,11 +1042,14 @@ def animate(i):
     yData = expectationPLind[:i+1]
     expLine.set_data(xData, yData)
 
-    return c, expLine
+    # Update the clock text
+    time_text.set_text(f't = {t:.2f}')
+
+    return c, expLine, time_text
 
 # Create the animation
 anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=WigHam.shape[2], interval=20, blit=True)
+                               frames=WigLind.shape[2], interval=20, blit=True)
 
 # Save the animation
 video_filename = 'LindWignerEvolution.mp4'
