@@ -8,6 +8,7 @@ from scipy.linalg import eig, expm, kron
 import soundfile as sf
 from numpy.fft import fft, ifft, fftshift, ifftshift
 import logging
+import os
 import subprocess
 
 # For animations, one could use matplotlib.animation, but here we will just store frames
@@ -449,7 +450,7 @@ Xhat = np.sqrt(hbar/2)*(a_dag + a)
 Phat = 1j*np.sqrt(hbar/2)*(a_dag - a)
 
 c2 = 0.35  # Quartic
-c4 = 0.03
+c4 = 0.05
 
 def H(Z):
     return 0.5*Z[1]**2 + c4*Z[0]**4 - c2*Z[0]**2
@@ -498,16 +499,16 @@ ind = sortInd[:bSize]
 
 deltaE = MinEnergies[1]-MinEnergies[0]
 t_tunnel = np.real(hbar*np.pi/deltaE)
-tf =np.real( 4*t_tunnel)
-dt = tf/600000
-NSSE = 600000
+#tf =np.real( 4*t_tunnel)
+tf =250
+NSSE = 1000000
 N = 2000
 TSpan = np.linspace(0, tf, N)
 InvVectors = np.linalg.inv(Vectors)
 
 #%% Sonification of Arrays
 BSound = 12
-rootFreq = 100  # in Hz
+rootFreq = 60  # in Hz
 fs = 44100
 duration_per_frame = 1/rootFreq
 frame_length_samples = round(duration_per_frame*fs)
@@ -606,7 +607,7 @@ if maxAudio > 0:
     audio_signal_Ham = 0.9 * audio_signal_Ham / maxAudio
 
 # Write to a WAV file
-sf.write('Hamiltonian_EvolutionSound.wav', audio_signal_Ham, fs)
+sf.write(f'Hamiltonian_EvolutionSound_c2={c2}_c4={c4}.wav', audio_signal_Ham, fs)
 
 #%% Hamiltonian Video
 
@@ -667,11 +668,11 @@ def animate(i):
 
 # Create the animation
 anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=WigHam.shape[2], interval=20, blit=True)
+                               frames=WigHam.shape[2], interval=1, blit=True)
 
 # Save the animation
-video_filename = 'HamiltonianWignerEvolution.mp4'
-logging.info(f"Saving video to {video_filename}...")
+video_filename = f'HamiltonianWignerEvolution_c2={c2}_c4={c4}.mp4'
+logging.info("Saving video to {video_filename}...")
 anim.save(video_filename, writer='ffmpeg', fps=1000/total_duration, dpi=300)
 logging.info("Video saved successfully.")
 
@@ -687,9 +688,9 @@ plt.close(fig)  # Close the figure to prevent it from displaying in some environ
 
 
 
-video_filename = 'HamiltonianWignerEvolution.mp4'
-audio_filename = 'Hamiltonian_EvolutionSound.wav'
-output_filename = 'Hamiltonian_EvolutionAV.mp4'
+video_filename = f'HamiltonianWignerEvolution_c2={c2}_c4={c4}.mp4'
+audio_filename = f'Hamiltonian_EvolutionSound_c2={c2}_c4={c4}.wav'
+output_filename = f'Hamiltonian_EvolutionAV_c2={c2}_c4={c4}.mp4'
 
 # In this command:
 # -c:v copy  will copy the video without re-encoding, preserving video quality.
@@ -711,11 +712,18 @@ cmd = [
 # Execute the ffmpeg command
 subprocess.run(cmd, check=True)
 
-
+# Check if the file exists before attempting to delete it
+if os.path.exists(video_filename):
+    os.remove(video_filename)
+    print(f"Deleted {video_filename}")
+else:
+    print(f"{video_filename} does not exist")
+    
+    
 #%%  Pure SSE dynamics
-eta=np.random.normal(0, 1, 60000)
+eta=np.random.normal(0, 1, NSSE)
 
-PsiSSE, RhoSSE = SSEDynamicsSRK(PsiIn, tf/60000, tf, HhatGamma,Lhat,hbar, eta)
+PsiSSE, RhoSSE = SSEDynamicsSRK(PsiIn, tf/NSSE, tf, HhatGamma,Lhat,hbar, eta)
 
 # Define sampling parameters
 num_samples = 1000  # Number of samples you want
@@ -790,7 +798,7 @@ if maxAudio > 0:
     audio_signal_SSE = 0.9 * audio_signal_SSE / maxAudio
 
 # Write to a WAV file
-sf.write('SSE_EvolutionSound.wav', audio_signal_SSE, fs)
+sf.write(f'SSE_EvolutionSound_c2={c2}_c4={c4}.wav', audio_signal_SSE, fs)
 
 #%% SSE Video
 
@@ -851,11 +859,11 @@ def animate(i):
 
 # Create the animation
 anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=WigSSE.shape[2], interval=20, blit=True)
+                               frames=WigSSE.shape[2], interval=1, blit=True)
 
 # Save the animation
-video_filename = 'SSEWignerEvolution.mp4'
-logging.info(f"Saving video to {video_filename}...")
+video_filename = f'SSEWignerEvolution_c2={c2}_c4={c4}.mp4'
+logging.info("Saving video to {video_filename}...")
 anim.save(video_filename, writer='ffmpeg', fps=1000/total_duration, dpi=300)
 logging.info("Video saved successfully.")
 
@@ -870,9 +878,9 @@ plt.close(fig)  # Close the figure to prevent it from displaying in some environ
 #%% AV combination SSE
 
 
-video_filename = 'SSEWignerEvolution.mp4'
-audio_filename = 'SSE_EvolutionSound.wav'
-output_filename = 'SSE_EvolutionAV.mp4'
+video_filename = f'SSEWignerEvolution_c2={c2}_c4={c4}.mp4'
+audio_filename = f'SSE_EvolutionSound_c2={c2}_c4={c4}.wav'
+output_filename = f'SSE_EvolutionAV_c2={c2}_c4={c4}.mp4'
 
 # In this command:
 # -c:v copy  will copy the video without re-encoding, preserving video quality.
@@ -893,6 +901,13 @@ cmd = [
 
 # Execute the ffmpeg command
 subprocess.run(cmd, check=True)
+
+# Check if the file exists before attempting to delete it
+if os.path.exists(video_filename):
+    os.remove(video_filename)
+    print(f"Deleted {video_filename}")
+else:
+    print(f"{video_filename} does not exist")
 
 #%%  Lindblad dynamics
 
@@ -988,7 +1003,7 @@ if maxAudio > 0:
     audio_signal_Lind = 0.9 * audio_signal_Lind / maxAudio
 
 # Write to a WAV file
-sf.write('Lind_EvolutionSound.wav', audio_signal_Lind, fs)
+sf.write(f'Lind_EvolutionSound_c2={c2}_c4={c4}.wav', audio_signal_Lind, fs)
 
 #%% Lind Video
 
@@ -1049,11 +1064,11 @@ def animate(i):
 
 # Create the animation
 anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=WigLind.shape[2], interval=20, blit=True)
+                               frames=WigLind.shape[2], interval=1, blit=True)
 
 # Save the animation
-video_filename = 'LindWignerEvolution.mp4'
-logging.info(f"Saving video to {video_filename}...")
+video_filename = f'LindWignerEvolution_c2={c2}_c4={c4}.mp4'
+logging.info("Saving video to {video_filename}...")
 anim.save(video_filename, writer='ffmpeg', fps=1000/total_duration, dpi=300)
 logging.info("Video saved successfully.")
 
@@ -1068,9 +1083,9 @@ plt.close(fig)  # Close the figure to prevent it from displaying in some environ
 #%% AV combination Lind
 
 
-video_filename = 'LindWignerEvolution.mp4'
-audio_filename = 'Lind_EvolutionSound.wav'
-output_filename = 'Lind_EvolutionAV.mp4'
+video_filename = f'LindWignerEvolution_c2={c2}_c4={c4}.mp4'
+audio_filename = f'Lind_EvolutionSound_c2={c2}_c4={c4}.wav'
+output_filename = f'Lind_EvolutionAV_c2={c2}_c4={c4}.mp4'
 
 # In this command:
 # -c:v copy  will copy the video without re-encoding, preserving video quality.
@@ -1091,3 +1106,10 @@ cmd = [
 
 # Execute the ffmpeg command
 subprocess.run(cmd, check=True)
+
+# Check if the file exists before attempting to delete it
+if os.path.exists(video_filename):
+    os.remove(video_filename)
+    print(f"Deleted {video_filename}")
+else:
+    print(f"{video_filename} does not exist")
