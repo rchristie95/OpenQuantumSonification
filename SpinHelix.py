@@ -444,7 +444,8 @@ def build_spin_chain_hamiltonian_xxz(L, J=1.0, Delta=np.cos(np.pi/4)):
         
         # ZZ coupling with anisotropy Delta and constant shift
         H += J * Delta * (Sz_j @ Sz_j1 - embed_operator(I, L, j) @ embed_operator(I, L, j+1))
-    
+        #H += J * Delta * (Sz_j @ Sz_j1 - embed_operator(I, L, j) @ embed_operator(I, L, j+1))
+
     return H
 
 def build_lindblad_operators_shs(L, alpha_L, beta_L, alpha_R, beta_R, r, Phi, Gamma=0.1):
