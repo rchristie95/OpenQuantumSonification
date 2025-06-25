@@ -106,10 +106,9 @@ def SSEDynamicsSRK_MultiL(PsiIn: np.ndarray, dt: float, tf: float,
     PsiOut[:, 0] = PsiIn
     RhoOut[:, :, 0] = np.outer(PsiIn, PsiIn.conjugate())
 
-    # Determine frequency of saving data
-    modfactor = N / 2000
-    if modfactor < 1:
-        modfactor = 1
+    # Determine how often results are stored.  Keeping ``modfactor`` as an
+    # integer avoids floating point comparisons when using the modulus operator.
+    modfactor = max(int(N // 2000), 1)
     m = 1
 
     for n in range(2, N + 1):
