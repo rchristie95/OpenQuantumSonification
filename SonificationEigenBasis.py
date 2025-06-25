@@ -674,7 +674,7 @@ anim = animation.FuncAnimation(fig, animate, init_func=init,
 
 # Save the animation
 video_filename = f'HamiltonianWignerEvolution_c2={c2}_c4={c4}.mp4'
-logging.info("Saving video to {video_filename}...")
+logging.info(f"Saving video to {video_filename}...")
 anim.save(video_filename, writer='ffmpeg', fps=1000/total_duration, dpi=300)
 logging.info("Video saved successfully.")
 
@@ -865,7 +865,7 @@ anim = animation.FuncAnimation(fig, animate, init_func=init,
 
 # Save the animation
 video_filename = f'SSEWignerEvolution_c2={c2}_c4={c4}.mp4'
-logging.info("Saving video to {video_filename}...")
+logging.info(f"Saving video to {video_filename}...")
 anim.save(video_filename, writer='ffmpeg', fps=1000/total_duration, dpi=300)
 logging.info("Video saved successfully.")
 
@@ -1070,7 +1070,7 @@ anim = animation.FuncAnimation(fig, animate, init_func=init,
 
 # Save the animation
 video_filename = f'LindWignerEvolution_c2={c2}_c4={c4}.mp4'
-logging.info("Saving video to {video_filename}...")
+logging.info(f"Saving video to {video_filename}...")
 anim.save(video_filename, writer='ffmpeg', fps=1000/total_duration, dpi=300)
 logging.info("Video saved successfully.")
 
