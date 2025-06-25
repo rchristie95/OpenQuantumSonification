@@ -86,10 +86,30 @@ def WignerT(Ex, x, p, hbar):
 
 def HamiltonianExponentiate(PsiIn, N, tf, Hhat, hbar):
     """
-    Python equivalent of:
-    function [outPsi,outRho]= HamiltonianExponentiate(PsiIn,dt,tf,Hhat,hbar)
+    Python equivalent of the MATLAB routine ``HamiltonianExponentiate``.
 
-    Evolves the initial state PsiIn under the Hamiltonian Hhat for time tf with step dt.
+    Evolves ``PsiIn`` under ``Hhat`` for a total time ``tf`` using ``N``
+    propagation steps.  The time step is computed internally as ``dt = tf / N``.
+
+    Parameters
+    ----------
+    PsiIn : ndarray
+        Initial state vector of length ``bSize``.
+    N : int
+        Number of time steps.
+    tf : float
+        Final evolution time.
+    Hhat : ndarray
+        Hamiltonian matrix of shape ``(bSize, bSize)``.
+    hbar : float
+        Reduced Planck constant.
+
+    Returns
+    -------
+    outPsi : ndarray
+        Propagated state vectors with shape ``(bSize, N)``.
+    outRho : ndarray
+        Corresponding density matrices with shape ``(bSize, bSize, N)``.
     """
     # The MATLAB code fixes N=2000 and dt=tf/N.
     # Here, we already have dt and tf, so we can deduce N if needed.
