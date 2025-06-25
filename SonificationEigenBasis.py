@@ -178,9 +178,11 @@ def SSEDynamicsSRK(PsiIn: np.ndarray, dt: float, tf: float,
     RhoOut[:, :, 0] = np.outer(PsiIn, PsiIn.conj())
     
     # Determine the frequency of saving data
-    modfactor = N / 2000
-    if modfactor < 1:
-        modfactor = 1  # Ensure at least every step is saved if N < 2000
+    # Determine how frequently to record data.  In the original MATLAB code the
+    # trajectory was sampled roughly 2000 times.  Using a floating point value
+    # for ``modfactor`` can lead to surprising behaviour when used with the
+    # modulus operator, so convert it to an integer explicitly.
+    modfactor = max(int(N // 2000), 1)
     
     # Initialize step counter
     m = 1  # Python uses 0-based indexing; m=1 corresponds to the second column
